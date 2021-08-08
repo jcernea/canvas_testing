@@ -4,10 +4,26 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
 import * as dat from 'dat.gui'
 let canvas, renderer;
 
-const GUI = new dat.GUI({width: 400})
-let config = {SCENE_COUNT: 100}
+/* Tex stuff */
+const loadingManager = new THREE.LoadingManager()
+const textureLoader = new THREE.TextureLoader(loadingManager);
 
-GUI.add(config, "SCENE_COUNT", 1, 300, 1).onFinishChange(() => init())
+loadingManager.onStart = (tex) => {
+  console.log(tex)
+}
+
+const colorTexture = new textureLoader.load('/tex/Facade003_4K_Color.jpg')
+const normalTexture = new textureLoader.load('/tex/Facade003_4K_Normal.jpg')
+const displacementTexture = new textureLoader.load('/tex/Facade003_4K_Displacement.jpg')
+const roughnessTexture = new textureLoader.load('/tex/Facade003_4K_Roughness.jpg')
+
+/* Tex stuff end */
+
+const GUI = new dat.GUI({width: 400})
+let config = {SCENE_COUNT: 100, TEXTURE_ENABLE: false}
+
+GUI.add(config, "SCENE_COUNT", 1, 300, 1).onFinishChange(() => init()).name("Scene Count")
+GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1).onFinishChange(() => init()).name("Enable 4K Texture")
 
 var guiContainer = document.getElementById("guicontainer")
 guiContainer.appendChild(GUI.domElement)
@@ -23,7 +39,7 @@ function init() {
   scenes = [] // Clear scenes
   const geometries = [
     new THREE.BoxGeometry(1, 1, 1),
-    new THREE.SphereGeometry(0.5, 12, 8),
+    new THREE.SphereGeometry(0.5, 100, 100),
     new THREE.DodecahedronGeometry(0.5),
     new THREE.CylinderGeometry(0.5, 0.5, 1, 12),
   ];
@@ -66,12 +82,29 @@ function init() {
     // add one random mesh to each scene
     const geometry = geometries[(geometries.length * Math.random()) | 0];
 
-    const material = new THREE.MeshStandardMaterial({
+    let material = new THREE.MeshStandardMaterial({
       color: new THREE.Color().setHSL(Math.random(), 1, 0.75),
       roughness: 0.5,
       metalness: 0,
       flatShading: true,
     });
+
+    if(config.TEXTURE_ENABLE){
+      /* Texture Mode */
+      material = new THREE.MeshStandardMaterial({
+      //color: new THREE.Color().setHSL(Math.random(), 1, 0.75),
+      map: colorTexture,
+      normalMap: normalTexture,
+      displacementMap: displacementTexture,
+      displacementScale: 0.01,
+      roughnessMap: roughnessTexture,
+      roughness: 0.5,
+      metalness: 0,
+      flatShading: true,
+    });
+    }
+    
+
 
     scene.add(new THREE.Mesh(geometry, material));
 
