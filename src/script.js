@@ -20,10 +20,12 @@ const roughnessTexture = new textureLoader.load('/tex/Facade003_4K_Roughness.jpg
 /* Tex stuff end */
 
 const GUI = new dat.GUI()
-let config = {SCENE_COUNT: 100, TEXTURE_ENABLE: false}
+let config = {SCENE_COUNT: 100, TEXTURE_ENABLE: false, ANIM_X: 100, ANIM_Y: 100}
 
 GUI.add(config, "SCENE_COUNT", 1, 300, 1).onFinishChange(() => init()).name("Scene Count")
 GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1).onFinishChange(() => init()).name("Enable 4K Texture")
+GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed")
+GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed")
 
 var guiContainer = document.getElementById("guicontainer")
 guiContainer.appendChild(GUI.domElement)
@@ -150,7 +152,8 @@ function render() {
 
   scenes.forEach(function (scene) {
     // so something moves
-    scene.children[0].rotation.y = Date.now() * 0.001;
+    scene.children[0].rotation.y = Date.now() * (0.00002 * config.ANIM_Y);
+    scene.children[0].rotation.x = Date.now() * (0.00002 * config.ANIM_X);
 
     // get the element that is a place holder for where we want to
     // draw the scene
