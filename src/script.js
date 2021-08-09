@@ -19,7 +19,7 @@ const roughnessTexture = new textureLoader.load('/tex/Facade003_4K_Roughness.jpg
 
 /* Tex stuff end */
 
-const GUI = new dat.GUI({width: 400})
+const GUI = new dat.GUI()
 let config = {SCENE_COUNT: 100, TEXTURE_ENABLE: false}
 
 GUI.add(config, "SCENE_COUNT", 1, 300, 1).onFinishChange(() => init()).name("Scene Count")
