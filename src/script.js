@@ -34,24 +34,70 @@ const roughnessTexture = new textureLoader.load(
   "/tex/Facade003_4K_Roughness.jpg"
 );
 
-const particleTexture = new textureLoader.load("/tex/particles/star_07.png");
+const starParticleTexture = new textureLoader.load(
+  "/tex/particles/star_07.png"
+);
+const muzzleParticleTexture = new textureLoader.load(
+  "/tex/particles/muzzle_04.png"
+);
+const scorchParticleTexture = new textureLoader.load(
+  "/tex/particles/scorch_01.png"
+);
+const heartParticleTexture = new textureLoader.load(
+  "/tex/particles/symbol_01.png"
+);
+const windowParticleTexture = new textureLoader.load(
+  "/tex/particles/window_04.png"
+);
+
+const PARTICLE_TEXTURES = {
+  "Star": 1,
+  "Scorch": 2,
+  "Muzzle": 3,
+  "Heart": 4,
+  "Window": 5,
+}
+
 
 /* Tex stuff end */
 
+/* GUI Stuff */
 const GUI = new dat.GUI({ width: 400 });
 let config = {
   SCENE_COUNT: 100,
   TEXTURE_ENABLE: false,
   PARTICLE_ENABLE: false,
   PARTICLE_COUNT: 100,
+  PARTICLE_TEX: '1', 
   ANIM_X: 10,
   ANIM_Y: 20,
 };
+/* Annoying :/ */
+let mainTex = starParticleTexture
 
-const stats = new Stats();
-stats.dom.id = "stats";
-document.body.appendChild(stats.dom);
+function texSwitch(id){
+  switch(id){
+    case '1':
+      mainTex = starParticleTexture
+      break;
+    case '2':
+      mainTex = scorchParticleTexture
+      break;
+    case '3':
+      mainTex = muzzleParticleTexture
+      break;
+    case '4':
+      mainTex = heartParticleTexture
+      break;
+    case '5':
+      mainTex = windowParticleTexture
+      break;
+    default:
+      mainTex = starParticleTexture
+  }
+}
 
+console.log(config)
 GUI.add(config, "SCENE_COUNT", 1, 300, 1)
   .onFinishChange(() => init())
   .name("Scene Count");
@@ -61,12 +107,23 @@ GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1)
 GUI.add(config, "PARTICLE_ENABLE", 1, 300, 1)
   .onFinishChange(() => addParticles())
   .name("Enable Particles");
-GUI.add(config, "PARTICLE_COUNT", 1, 10000, 1).name("Particle Count").onFinishChange(() => addParticles(true));
+GUI.add(config, "PARTICLE_COUNT", 1, 10000, 1)
+  .name("Particle Count")
+  .onFinishChange(() => addParticles(true));
 GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed");
 GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed");
+GUI.add(config, "PARTICLE_TEX", PARTICLE_TEXTURES)
+  .name("Particle Texture").onFinishChange(() => {texSwitch(config.PARTICLE_TEX); addParticles(true)} )
 
 var guiContainer = document.getElementById("guicontainer");
 guiContainer.appendChild(GUI.domElement);
+/* Gui End */
+
+/* Stats stuff */
+const stats = new Stats();
+stats.dom.id = "stats";
+document.body.appendChild(stats.dom);
+/* Stats end */
 
 let scenes = [];
 
@@ -160,7 +217,6 @@ function init() {
 
     scene.add(new THREE.HemisphereLight(0xaaaaaa, 0x444444));
 
-
     const light = new THREE.DirectionalLight(0xffffff, 0.5);
     light.position.set(1, 1, 1);
     scene.add(light);
@@ -174,7 +230,7 @@ function init() {
 }
 
 function addParticles(isChanged) {
-  scenes.forEach(function(scene) {
+  scenes.forEach(function (scene) {
     /* Particle Stuff */
     const particlesGeometry = new THREE.BufferGeometry();
     const particleCount = config.PARTICLE_COUNT;
@@ -198,25 +254,27 @@ function addParticles(isChanged) {
     const particlesMaterial = new THREE.PointsMaterial({
       size: 0.1,
       vertexColors: true,
-      alphaMap: particleTexture,
+      alphaMap: mainTex,
       sizeAttenuation: true,
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending
+      blending: THREE.AdditiveBlending,
     });
     /* Particle Stuff End */
-    if(config.PARTICLE_ENABLE){
-      if(isChanged){
-        scene.remove(scene.userData.particles)
+    if (config.PARTICLE_ENABLE) {
+      if (isChanged) {
+        scene.remove(scene.userData.particles);
       }
-       const justParticles = new THREE.Points(particlesGeometry, particlesMaterial);     
-       scene.userData.particles = justParticles
-       scene.add(scene.userData.particles)
-    }else{
-      scene.remove(scene.userData.particles)
+      const justParticles = new THREE.Points(
+        particlesGeometry,
+        particlesMaterial
+      );
+      scene.userData.particles = justParticles;
+      scene.add(scene.userData.particles);
+    } else {
+      scene.remove(scene.userData.particles);
     }
-
-  })
+  });
 }
 
 function updateSize() {
@@ -250,7 +308,6 @@ function render() {
     // so something moves
     scene.children[0].rotation.y = Date.now() * (0.00002 * config.ANIM_Y);
     scene.children[0].rotation.x = Date.now() * (0.00002 * config.ANIM_X);
-
 
     // get the element that is a place holder for where we want to
     // draw the scene
