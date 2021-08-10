@@ -1,35 +1,64 @@
-import * as THREE from 'three'
-import "./style.css"
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls"
-import * as dat from 'dat.gui'
+import * as THREE from "three";
+import "./style.css";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import * as dat from "dat.gui";
+import Stats from "three/examples/jsm/libs/stats.module";
 let canvas, renderer;
 
 /* Tex stuff */
-const loadingManager = new THREE.LoadingManager()
+const loadingManager = new THREE.LoadingManager();
+
+loadingManager.onLoad = function () {
+  console.log("loaded");
+};
+
+loadingManager.onStart = function (url, itemsLoaded, itemsTotal) {
+  console.log(
+    "Started loading file: " +
+      url +
+      ".\nLoaded " +
+      itemsLoaded +
+      " of " +
+      itemsTotal +
+      " files."
+  );
+};
 const textureLoader = new THREE.TextureLoader(loadingManager);
 
-loadingManager.onStart = (tex) => {
-  console.log(tex)
-}
-
-const colorTexture = new textureLoader.load('/tex/Facade003_4K_Color.jpg')
-const normalTexture = new textureLoader.load('/tex/Facade003_4K_Normal.jpg')
-const displacementTexture = new textureLoader.load('/tex/Facade003_4K_Displacement.jpg')
-const roughnessTexture = new textureLoader.load('/tex/Facade003_4K_Roughness.jpg')
+const colorTexture = new textureLoader.load("/tex/Facade003_4K_Color.jpg");
+const normalTexture = new textureLoader.load("/tex/Facade003_4K_Normal.jpg");
+const displacementTexture = new textureLoader.load(
+  "/tex/Facade003_4K_Displacement.jpg"
+);
+const roughnessTexture = new textureLoader.load(
+  "/tex/Facade003_4K_Roughness.jpg"
+);
 
 /* Tex stuff end */
 
-const GUI = new dat.GUI()
-let config = {SCENE_COUNT: 100, TEXTURE_ENABLE: false, ANIM_X: 100, ANIM_Y: 100}
+const GUI = new dat.GUI({ width: 400 });
+let config = {
+  SCENE_COUNT: 100,
+  TEXTURE_ENABLE: false,
+  ANIM_X: 10,
+  ANIM_Y: 20,
+};
 
-GUI.add(config, "SCENE_COUNT", 1, 300, 1).onFinishChange(() => init()).name("Scene Count")
-GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1).onFinishChange(() => init()).name("Enable 4K Texture")
-GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed")
-GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed")
+const stats = new Stats();
+stats.dom.id = "stats"
+document.body.appendChild(stats.dom)
 
-var guiContainer = document.getElementById("guicontainer")
-guiContainer.appendChild(GUI.domElement)
+GUI.add(config, "SCENE_COUNT", 1, 300, 1)
+  .onFinishChange(() => init())
+  .name("Scene Count");
+GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1)
+  .onFinishChange(() => init())
+  .name("Enable 4K Texture");
+GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed");
+GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed");
 
+var guiContainer = document.getElementById("guicontainer");
+guiContainer.appendChild(GUI.domElement);
 
 let scenes = [];
 
@@ -38,16 +67,29 @@ animate();
 
 function init() {
   canvas = document.getElementById("multicanvas");
-  scenes = [] // Clear scenes
+  scenes = []; // Clear scenes
+  const points = [];
+  for (let i = 0; i < 2; i++) {
+    points.push(
+      new THREE.Vector2(
+        Math.sin(i * 0.02) * Math.sin(i * 0.05) * 1 + 0.2,
+        (i - 0.5) * 2
+      )
+    );
+  }
   const geometries = [
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.SphereGeometry(0.5, 100, 100),
     new THREE.DodecahedronGeometry(0.5),
     new THREE.CylinderGeometry(0.5, 0.5, 1, 12),
+    new THREE.IcosahedronGeometry(0.5, 1),
+    new THREE.LatheGeometry(points, 20),
+    new THREE.TorusGeometry(0.5, 0.2, 20, 20),
+    new THREE.TorusKnotGeometry(0.5, 0.1, 50, 20),
   ];
 
   const content = document.getElementById("content");
-  content.innerHTML = ''
+  content.innerHTML = "";
 
   for (let i = 0; i < config.SCENE_COUNT; i++) {
     const scene = new THREE.Scene();
@@ -91,22 +133,20 @@ function init() {
       flatShading: true,
     });
 
-    if(config.TEXTURE_ENABLE){
+    if (config.TEXTURE_ENABLE) {
       /* Texture Mode */
       material = new THREE.MeshStandardMaterial({
-      //color: new THREE.Color().setHSL(Math.random(), 1, 0.75),
-      map: colorTexture,
-      normalMap: normalTexture,
-      displacementMap: displacementTexture,
-      displacementScale: 0.01,
-      roughnessMap: roughnessTexture,
-      roughness: 0.5,
-      metalness: 0,
-      flatShading: true,
-    });
+        //color: new THREE.Color().setHSL(Math.random(), 1, 0.75),
+        map: colorTexture,
+        normalMap: normalTexture,
+        displacementMap: displacementTexture,
+        displacementScale: 0.01,
+        roughnessMap: roughnessTexture,
+        roughness: 0.5,
+        metalness: 0,
+        flatShading: true,
+      });
     }
-    
-
 
     scene.add(new THREE.Mesh(geometry, material));
 
@@ -134,6 +174,7 @@ function updateSize() {
 }
 
 function animate() {
+  stats.update()
   render();
   requestAnimationFrame(animate);
 }

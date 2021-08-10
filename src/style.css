@@ -14,6 +14,13 @@ a {
   color: #08f;
 }
 
+#stats {
+  position: fixed !important;
+  top: auto !important;
+  bottom: 0px;
+  right: 0px !important;
+  left: auto !important;
+}
 #src_ref {
   text-decoration: none;
   left: 50%;
@@ -75,14 +82,14 @@ a {
 }
 
 .list-item > div:nth-child(1) {
-  width: 10vw;
-  height: 10vw;
+  width: 6vw;
+  height: 5vw;
 }
 
 .list-item > div:nth-child(2) {
   color: rgb(11, 211, 211);
   font-family: "Roboto", sans-serif;
-  font-size: large;
-  width: 10vw;
+  font-size: small;
+  width: 5vw;
   margin-top: 0.5em;
 }
