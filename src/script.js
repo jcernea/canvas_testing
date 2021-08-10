@@ -34,19 +34,23 @@ const roughnessTexture = new textureLoader.load(
   "/tex/Facade003_4K_Roughness.jpg"
 );
 
+const particleTexture = new textureLoader.load("/tex/particles/star_07.png");
+
 /* Tex stuff end */
 
 const GUI = new dat.GUI({ width: 400 });
 let config = {
   SCENE_COUNT: 100,
   TEXTURE_ENABLE: false,
+  PARTICLE_ENABLE: false,
+  PARTICLE_COUNT: 100,
   ANIM_X: 10,
   ANIM_Y: 20,
 };
 
 const stats = new Stats();
-stats.dom.id = "stats"
-document.body.appendChild(stats.dom)
+stats.dom.id = "stats";
+document.body.appendChild(stats.dom);
 
 GUI.add(config, "SCENE_COUNT", 1, 300, 1)
   .onFinishChange(() => init())
@@ -54,6 +58,10 @@ GUI.add(config, "SCENE_COUNT", 1, 300, 1)
 GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1)
   .onFinishChange(() => init())
   .name("Enable 4K Texture");
+GUI.add(config, "PARTICLE_ENABLE", 1, 300, 1)
+  .onFinishChange(() => addParticles())
+  .name("Enable Particles");
+GUI.add(config, "PARTICLE_COUNT", 1, 10000, 1).name("Particle Count").onFinishChange(() => addParticles(true));
 GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed");
 GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed");
 
@@ -152,6 +160,7 @@ function init() {
 
     scene.add(new THREE.HemisphereLight(0xaaaaaa, 0x444444));
 
+
     const light = new THREE.DirectionalLight(0xffffff, 0.5);
     light.position.set(1, 1, 1);
     scene.add(light);
@@ -164,6 +173,52 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
 }
 
+function addParticles(isChanged) {
+  scenes.forEach(function(scene) {
+    /* Particle Stuff */
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particleCount = config.PARTICLE_COUNT;
+    const particlePositions = new Float32Array(particleCount * 3);
+    const particleColors = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i++) {
+      particlePositions[i] = (Math.random() - 0.5) * 3;
+      particleColors[i] = Math.random();
+    }
+
+    particlesGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(particlePositions, 3)
+    );
+    particlesGeometry.setAttribute(
+      "color",
+      new THREE.BufferAttribute(particleColors, 3)
+    );
+
+    const particlesMaterial = new THREE.PointsMaterial({
+      size: 0.1,
+      vertexColors: true,
+      alphaMap: particleTexture,
+      sizeAttenuation: true,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    /* Particle Stuff End */
+    if(config.PARTICLE_ENABLE){
+      if(isChanged){
+        scene.remove(scene.userData.particles)
+      }
+       const justParticles = new THREE.Points(particlesGeometry, particlesMaterial);     
+       scene.userData.particles = justParticles
+       scene.add(scene.userData.particles)
+    }else{
+      scene.remove(scene.userData.particles)
+    }
+
+  })
+}
+
 function updateSize() {
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
@@ -174,7 +229,7 @@ function updateSize() {
 }
 
 function animate() {
-  stats.update()
+  stats.update();
   render();
   requestAnimationFrame(animate);
 }
@@ -195,6 +250,7 @@ function render() {
     // so something moves
     scene.children[0].rotation.y = Date.now() * (0.00002 * config.ANIM_Y);
     scene.children[0].rotation.x = Date.now() * (0.00002 * config.ANIM_X);
+
 
     // get the element that is a place holder for where we want to
     // draw the scene
