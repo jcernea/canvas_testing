@@ -1,6 +1,6 @@
 # WebGL+Three.JS multi canvas render testing
 
-
+[Click here to see it live](https://inspiring-mahavira-e202fc.netlify.app/)
 ``` bash
 # Install dependencies (only the first time)
 npm install

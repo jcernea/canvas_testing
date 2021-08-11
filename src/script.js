@@ -66,9 +66,10 @@ const GUI = new dat.GUI({ width: 400 });
 let config = {
   SCENE_COUNT: 100,
   TEXTURE_ENABLE: false,
-  PARTICLE_ENABLE: false,
-  PARTICLE_COUNT: 100,
+  PARTICLE_ENABLE: true,
+  PARTICLE_COUNT: 250,
   PARTICLE_TEX: '1', 
+  ORBIT_ANIM_X: 3,
   ANIM_X: 10,
   ANIM_Y: 20,
 };
@@ -107,13 +108,15 @@ GUI.add(config, "TEXTURE_ENABLE", 1, 300, 1)
 GUI.add(config, "PARTICLE_ENABLE", 1, 300, 1)
   .onFinishChange(() => addParticles())
   .name("Enable Particles");
+GUI.add(config, "PARTICLE_TEX", PARTICLE_TEXTURES)
+  .name("Particle Texture").onFinishChange(() => {texSwitch(config.PARTICLE_TEX); addParticles(true)} )
 GUI.add(config, "PARTICLE_COUNT", 1, 10000, 1)
   .name("Particle Count")
   .onFinishChange(() => addParticles(true));
-GUI.add(config, "ANIM_X", 1, 300, 1).name("X Axis Animation Speed");
-GUI.add(config, "ANIM_Y", 1, 300, 1).name("Y Axis Animation Speed");
-GUI.add(config, "PARTICLE_TEX", PARTICLE_TEXTURES)
-  .name("Particle Texture").onFinishChange(() => {texSwitch(config.PARTICLE_TEX); addParticles(true)} )
+GUI.add(config, "ANIM_X", 1, 300, 1).name("Shape X Animation Speed");
+GUI.add(config, "ANIM_Y", 1, 300, 1).name("Shape Y Animation Speed");
+GUI.add(config, "ORBIT_ANIM_X", 0, 10, 0.1).name("Auto Camera Rotation Speed");
+
 
 var guiContainer = document.getElementById("guicontainer");
 guiContainer.appendChild(GUI.domElement);
@@ -131,6 +134,7 @@ init();
 animate();
 
 function init() {
+  
   canvas = document.getElementById("multicanvas");
   scenes = []; // Clear scenes
   const points = [];
@@ -186,6 +190,8 @@ function init() {
     controls.maxDistance = 5;
     controls.enablePan = false;
     controls.enableZoom = false;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = config.CAMERA_ROTATION_X
     scene.userData.controls = controls;
 
     // add one random mesh to each scene
@@ -212,6 +218,8 @@ function init() {
         flatShading: true,
       });
     }
+
+    if(config.PARTICLE_ENABLE) {addParticles(true)}
 
     scene.add(new THREE.Mesh(geometry, material));
 
@@ -309,6 +317,8 @@ function render() {
     scene.children[0].rotation.y = Date.now() * (0.00002 * config.ANIM_Y);
     scene.children[0].rotation.x = Date.now() * (0.00002 * config.ANIM_X);
 
+
+
     // get the element that is a place holder for where we want to
     // draw the scene
     const element = scene.userData.element;
@@ -336,6 +346,10 @@ function render() {
     renderer.setScissor(left, bottom, width, height);
 
     const camera = scene.userData.camera;
+    const controls = scene.userData.controls;
+    controls.autoRotateSpeed = config.ORBIT_ANIM_X
+    controls.update();
+
 
     //camera.aspect = width / height; // not changing in this example
     //camera.updateProjectionMatrix();
