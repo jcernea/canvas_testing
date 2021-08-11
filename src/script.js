@@ -67,9 +67,10 @@ let config = {
   SCENE_COUNT: 100,
   TEXTURE_ENABLE: false,
   PARTICLE_ENABLE: true,
-  PARTICLE_COUNT: 250,
+  PARTICLE_COUNT: 1000,
   PARTICLE_TEX: '1', 
-  ORBIT_ANIM_X: 3,
+  PARTICLE_SIZE: 0.05,
+  ORBIT_ANIM_X: 5,
   ANIM_X: 10,
   ANIM_Y: 20,
 };
@@ -113,6 +114,7 @@ GUI.add(config, "PARTICLE_TEX", PARTICLE_TEXTURES)
 GUI.add(config, "PARTICLE_COUNT", 1, 10000, 1)
   .name("Particle Count")
   .onFinishChange(() => addParticles(true));
+GUI.add(config, "PARTICLE_SIZE", 0.01, 0.5, 0.01).name("Particle Size").onFinishChange(() => addParticles(true))
 GUI.add(config, "ANIM_X", 1, 300, 1).name("Shape X Animation Speed");
 GUI.add(config, "ANIM_Y", 1, 300, 1).name("Shape Y Animation Speed");
 GUI.add(config, "ORBIT_ANIM_X", 0, 10, 0.1).name("Auto Camera Rotation Speed");
@@ -219,7 +221,7 @@ function init() {
       });
     }
 
-    if(config.PARTICLE_ENABLE) {addParticles(true)}
+
 
     scene.add(new THREE.Mesh(geometry, material));
 
@@ -230,6 +232,7 @@ function init() {
     scene.add(light);
 
     scenes.push(scene);
+    if(config.PARTICLE_ENABLE) {addParticles(true)}
   }
 
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -260,7 +263,7 @@ function addParticles(isChanged) {
     );
 
     const particlesMaterial = new THREE.PointsMaterial({
-      size: 0.1,
+      size: config.PARTICLE_SIZE,
       vertexColors: true,
       alphaMap: mainTex,
       sizeAttenuation: true,
